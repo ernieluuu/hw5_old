@@ -1,3 +1,20 @@
+/*
+#ifndef RECCHECK
+// For debugging
+#include <iostream>
+// For std::remove
+#include <algorithm>
+#include <map>
+#include <set>
+#endif
+
+#include "wordle.h"
+#include "dict-eng.h"
+
+using namespace std;
+*/
+
+
 #ifndef RECCHECK
 // For debugging
 #include <iostream>
@@ -11,101 +28,78 @@
 #include "dict-eng.h"
 using namespace std;
 
-
 // Add prototypes of helper functions here
-void findWords(const std::string& in,
-	const std::string& floating,
-	const std::set<std::string>& dict,
-	std::set<std::string>& potentialWords,
-	int currLoc,
-	int alphaLoc);
-
+void findWords(const std::string& in, const std::string& floating, const std::set<std::string>& dict, std::set<std::string>& potentialWords, string& curr, int currLoc);
 bool isWord(const std::string& word, const std::set<std::string>& dict);
 
 // Definition of primary wordle function
-std::set<std::string> wordle(
-    const std::string& in,
-    const std::string& floating,
-    const std::set<std::string>& dict)
-{
+std::set<std::string> wordle(const std::string& in, const std::string& floating, const std::set<std::string>& dict) {
     // Add your code here
+    std::set<std::string> potentialWords; // stores potential matches
+    
+    // if empty string
+    if (in.size() == 0) {
+        return potentialWords;
+    }
 
-	std::set<std::string> potentialWords; // stores potential matches
+    // START: Added code
+    string curr = in;
+    findWords(in, floating, dict, potentialWords, curr, 0);
+    // END: Added code
 
-	// if empty string
-	if (in.size() == 0)
-	{
-		return;
-	}
-
+    return potentialWords;
 }
 
 // Define any helper functions here
-
-
 /*
-* 
-nvm, scratch all of that
-you first generate a set / list of possible words
-and then use the find() method of a set (logn) to check
-if it is a real word in the english langauge.
-
-check if in[currLoc] == '-' or == alphabet_loc
-
-
-*/
-
-
+ * nvm, scratch all of that you first generate a set / list of possible words and then use the find() method of a set (logn) to check if it is a real word in the english langauge.
+ * check if in[currLoc] == '-' or == alphabet_loc
+ */
 /*this function recursively generates a set of potential letter combinations*/
-void findWords(const std::string& in,
-	const std::string& floating,
-	const std::set<std::string>& dict,
-	std::set<std::string>& potentialWords,
-	int currLoc,
-	int alphaLoc)
-{
-	/*
-	where currLoc stands for the current location in 'in'
-	and alphaLoc stands for the current alphabetical letter that we are on.
-	*/
+void findWords(const std::string& in, const std::string& floating, const std::set<std::string>& dict, std::set<std::string>& potentialWords, string& curr, int currLoc) {
+    /* where currLoc stands for the current location in 'in' */
 
-	/*
-	if the alphaLoc letter is a floating letter
-	pop that letter out of floating letters
-	note this is only for when replacing '-' letters
-	and not otherwise.
+    // START: Added code
+    // Base case: if all letters are filled, check if it's a valid word
+    if (currLoc == in.size()) {
+        if (isWord(curr, dict) && std::none_of(floating.begin(), floating.end(), [&curr](char c) { return curr.find(c) == std::string::npos; })) {
+            potentialWords.insert(curr);
+        }
+        return;
+    }
 
-	if, after the last letter, the floating string != ""
-	then you can remove that word from the potentialWords set.
-	*/
+    // If the current location is a fixed letter, move to the next location
+    if (in[currLoc] != '-') {
+        findWords(in, floating, dict, potentialWords, curr, currLoc + 1);
+        return;
+    }
 
-	/*
-	
-	do you need to backtrack?
-	fill it in with letters and then check when word complete
-	if word complete and isWord then insert into the set
-	keep backtracking?
+    // Try placing floating letters at the current location
+    for (char c : floating) {
+        if (curr.find(c) == string::npos) {
+            curr[currLoc] = c;
+            findWords(in, floating, dict, potentialWords, curr, currLoc + 1);
+            curr[currLoc] = '-'; // Backtrack
+        }
+    }
 
-	if '-' are equal to the number of floating letters
-	only try the floating letters.
-
-	*/
-
-
-
-
+    // Try placing all alphabet letters at the current location
+    for (char c = 'a'; c <= 'z'; c++) {
+        curr[currLoc] = c;
+        findWords(in, floating, dict, potentialWords, curr, currLoc + 1);
+        curr[currLoc] = '-'; // Backtrack
+    }
+    // END: Added code
 }
 
-bool isWord(const std::string& word, const std::set<std::string>& dict)
-{	
-	return dict.find(word) != dict.end();
-	//auto it = dict.find(word);
-
-	//// Check if element was found
-	//if (it != dict.end()) {
-	//	return true;
-	//}
-	//else {
-	//	return false;
-	//}
+bool isWord(const std::string& word, const std::set<std::string>& dict) {
+    return dict.find(word) != dict.end();
+    //auto it = dict.find(word);
+    //// Check if element was found
+    //if (it != dict.end()) {
+    //    return true;
+    //}
+    //else {
+    //    return false;
+    //}
 }
